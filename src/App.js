@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import Auth from "./components/auth";
 import { db } from "./config/firebase";
-import { getDocs, collection, addDoc } from "firebase/firestore";
+import { getDocs, collection, addDoc, deleteDoc, doc } from "firebase/firestore";
 
 function App() {
   const [movieList, setMovieList] = useState([]);
@@ -14,22 +14,28 @@ function App() {
 
   const moviesCollectionRef = collection(db, "movies");
 
-  useEffect(() => {
-    const getMovieList = async () => {
-      try {
-        const data = await getDocs(moviesCollectionRef);
-        const filteredData = data.docs.map((doc) => ({
-          ...doc.data(),
-          id: doc.id,
-        }));
-        setMovieList(filteredData);
-      } catch (err) {
-        console.log(err);
-      }
-    };
+  const getMovieList = async () => {
+    try {
+      const data = await getDocs(moviesCollectionRef);
+      const filteredData = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      setMovieList(filteredData);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
+  useEffect(() => {
     getMovieList();
   }, []);
+
+  const deleteMovie = async (id) => {
+    const movieDoc = doc(db,"movies", id);
+    await deleteDoc(movieDoc);
+    getMovieList()
+  }
 
   const onSubmitMovie = async () => {
     try {
@@ -38,6 +44,8 @@ function App() {
         realasedate: newRealaseDate,
         recivedAnOscar: isNewMovieOscar,
       });
+
+      getMovieList();
     } catch (err) {
       console.log(err);
     }
@@ -71,6 +79,7 @@ function App() {
               {movie.title}
             </h1>
             <p> Date : {movie.realasedate}</p>
+            <button onClick= {() => deleteMovie(movie.id)}>Delete Movie</button>
           </div>
         ))}
       </div>
