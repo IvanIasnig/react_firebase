@@ -9,10 +9,22 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  query,
+  where,
 } from "firebase/firestore";
-import { ref, uploadBytes } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 function App() {
+  // User State
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+    return unsubscribe;
+  }, []);
+
   const [movieList, setMovieList] = useState([]);
 
   // New Movie States
@@ -26,16 +38,25 @@ function App() {
   // File Upload State
   const [fileUpload, setFileUpload] = useState(null);
 
+  // Download URL state
+  const [downloadURL, setDownloadURL] = useState(null);
+
   const moviesCollectionRef = collection(db, "movies");
 
   const getMovieList = async () => {
     try {
-      const data = await getDocs(moviesCollectionRef);
-      const filteredData = data.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-      }));
-      setMovieList(filteredData);
+      // Ensure that the user is logged in
+      if (user) {
+        // Create a query against the collection.
+        const q = query(moviesCollectionRef, where("userId", "==", user.uid));
+
+        const data = await getDocs(q);
+        const filteredData = data.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }));
+        setMovieList(filteredData);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -43,7 +64,7 @@ function App() {
 
   useEffect(() => {
     getMovieList();
-  }, []);
+  }, [user]);
 
   const onSubmitMovie = async () => {
     try {
@@ -74,6 +95,12 @@ function App() {
     const filesFolderRef = ref(storage, `projectFiles/${fileUpload.name}`);
     try {
       await uploadBytes(filesFolderRef, fileUpload);
+
+      // After the file uploads, get a download URL
+      const url = await getDownloadURL(filesFolderRef);
+
+      // Save the download URL to state
+      setDownloadURL(url);
     } catch (err) {
       console.error(err);
     }
@@ -82,16 +109,16 @@ function App() {
   return (
     <div className="App">
       <nav className="navbar navbar-dark bg-dark mb-4">
-        <a className="navbar-brand" href="#">Movie App</a>
+        <div className="navbar-brand">Movie App</div>
       </nav>
-  
+
       <div className="container">
         <Auth />
-  
+
         <div className="card mb-4 p-4">
           <div className="form-group">
             <input
-              className="form-control"
+              className="form-control mb-2"
               placeholder="Movie title..."
               onChange={(e) => setNewMovieTitle(e.target.value)}
             />
@@ -113,9 +140,11 @@ function App() {
             />
             <label className="form-check-label">Received an Oscar</label>
           </div>
-          <button className="btn btn-primary" onClick={onSubmitMovie}> Submit Movie</button>
+          <button className="btn btn-primary" onClick={onSubmitMovie}>
+            Submit Movie
+          </button>
         </div>
-  
+
         <div className="card mb-4 p-4">
           {movieList.map((movie) => (
             <div key={movie.id} className="mb-3">
@@ -123,9 +152,14 @@ function App() {
                 {movie.title}
               </h2>
               <p> Date: {movie.releaseDate} </p>
-  
-              <button className="btn btn-danger m-2" onClick={() => deleteMovie(movie.id)}> Delete Movie</button>
-  
+
+              <button
+                className="btn btn-danger m-2"
+                onClick={() => deleteMovie(movie.id)}
+              >
+                Delete Movie
+              </button>
+
               <div className="form-group">
                 <input
                   className="form-control"
@@ -133,16 +167,32 @@ function App() {
                   onChange={(e) => setUpdatedTitle(e.target.value)}
                 />
               </div>
-              <button className="btn btn-success m-1" onClick={() => updateMovieTitle(movie.id)}> Update Title</button>
+              <button
+                className="btn btn-success m-1"
+                onClick={() => updateMovieTitle(movie.id)}
+              >
+                Update Title
+              </button>
             </div>
           ))}
         </div>
-  
+
         <div className="card p-4">
           <div className="form-group">
-            <input type="file" className="form-control-file" onChange={(e) => setFileUpload(e.target.files[0])} />
+            <input
+              type="file"
+              className="form-control-file"
+              onChange={(e) => setFileUpload(e.target.files[0])}
+            />
           </div>
-          <button className="btn btn-info " onClick={uploadFile}> Upload File </button>
+          <button className="btn btn-info" onClick={uploadFile}>
+            Upload File
+          </button>
+          {downloadURL && (
+            <a href={downloadURL} download>
+              Download
+            </a>
+          )}
         </div>
       </div>
     </div>
