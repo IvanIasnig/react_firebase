@@ -81,51 +81,69 @@ function App() {
 
   return (
     <div className="App">
-      <Auth />
-
-      <div>
-        <input
-          placeholder="Movie title..."
-          onChange={(e) => setNewMovieTitle(e.target.value)}
-        />
-        <input
-          placeholder="Release Date..."
-          type="number"
-          onChange={(e) => setNewReleaseDate(Number(e.target.value))}
-        />
-        <input
-          type="checkbox"
-          checked={isNewMovieOscar}
-          onChange={(e) => setIsNewMovieOscar(e.target.checked)}
-        />
-        <label> Received an Oscar</label>
-        <button onClick={onSubmitMovie}> Submit Movie</button>
-      </div>
-      <div>
-        {movieList.map((movie) => (
-          <div key={movie.id}>
-            <h1 style={{ color: movie.receivedAnOscar ? "green" : "red" }}>
-              {movie.title}
-            </h1>
-            <p> Date: {movie.releaseDate} </p>
-
-            <button onClick={() => deleteMovie(movie.id)}> Delete Movie</button>
-
+      <nav className="navbar navbar-dark bg-dark mb-4">
+        <a className="navbar-brand" href="#">Movie App</a>
+      </nav>
+  
+      <div className="container">
+        <Auth />
+  
+        <div className="card mb-4 p-4">
+          <div className="form-group">
             <input
-              placeholder="new title..."
-              onChange={(e) => setUpdatedTitle(e.target.value)}
+              className="form-control"
+              placeholder="Movie title..."
+              onChange={(e) => setNewMovieTitle(e.target.value)}
             />
-            <button onClick={() => updateMovieTitle(movie.id)}>
-              {" "}
-              Update Title
-            </button>
           </div>
-        ))}
-      </div>
-
-      <div>
-        <input type="file" onChange={(e) => setFileUpload(e.target.files[0])} />
-        <button onClick={uploadFile}> Upload File </button>
+          <div className="form-group">
+            <input
+              className="form-control"
+              placeholder="Release Date..."
+              type="number"
+              onChange={(e) => setNewReleaseDate(Number(e.target.value))}
+            />
+          </div>
+          <div className="form-group form-check">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              checked={isNewMovieOscar}
+              onChange={(e) => setIsNewMovieOscar(e.target.checked)}
+            />
+            <label className="form-check-label">Received an Oscar</label>
+          </div>
+          <button className="btn btn-primary" onClick={onSubmitMovie}> Submit Movie</button>
+        </div>
+  
+        <div className="card mb-4 p-4">
+          {movieList.map((movie) => (
+            <div key={movie.id} className="mb-3">
+              <h2 style={{ color: movie.receivedAnOscar ? "green" : "red" }}>
+                {movie.title}
+              </h2>
+              <p> Date: {movie.releaseDate} </p>
+  
+              <button className="btn btn-danger m-2" onClick={() => deleteMovie(movie.id)}> Delete Movie</button>
+  
+              <div className="form-group">
+                <input
+                  className="form-control"
+                  placeholder="new title..."
+                  onChange={(e) => setUpdatedTitle(e.target.value)}
+                />
+              </div>
+              <button className="btn btn-success m-1" onClick={() => updateMovieTitle(movie.id)}> Update Title</button>
+            </div>
+          ))}
+        </div>
+  
+        <div className="card p-4">
+          <div className="form-group">
+            <input type="file" className="form-control-file" onChange={(e) => setFileUpload(e.target.files[0])} />
+          </div>
+          <button className="btn btn-info " onClick={uploadFile}> Upload File </button>
+        </div>
       </div>
     </div>
   );
